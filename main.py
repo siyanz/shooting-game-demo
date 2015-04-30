@@ -37,7 +37,10 @@ class ShootingGame(Widget):
 
 	def on_touch_down(self, touch):
 		self.missile.size = Vector(0, 0)
-		send_server(40005, 0.29, 400, 200)
+		if (touch.x < self.parent.width/2):
+			send_server(40002, 0.29, 400, 200)
+		else:
+			send_server(50002, 0.29, 400, 200)
 		self.update = True
 		self.pos_current = Vector(touch.x, touch.y)
 		self.pos_down = self.pos_current
@@ -58,14 +61,18 @@ class ShootingGame(Widget):
 			self.vel = Vector(((self.pos_up[0] - self.pos_down[0])/self.travelT)/60, ((self.pos_up[1] - self.pos_down[1])/self.travelT)/60)
 
 		self.update = False
+
 		if (self.vel[0] != 0) and (self.vel[1] != 0):
 			self.travel = True
-			# print "visual velocity:" + str(self.vel[0])
-			(intensity, duration) = get_haptic_par(self.missile.size[0], self.vel, self.parent.width - self.pos_up[0])
-			# print "(visual, haptic) duration:" + str(self.parent.width/(self.vel[0]*60)*1000) + ", " + str(0.28 * duration + 60.7 + 1.4 * duration)
-			send_server(40003, intensity, duration, 200)
+			if (self.vel[0] > 0 and self.pos_down[0] < (self.parent.width / 2)):
+				(intensity, duration) = get_haptic_par(self.missile.size[0], self.vel, self.parent.width - self.pos_up[0])
+				send_server(40001, intensity, duration, 200)
+			else if (self.vel[0] < 0 and self.pos_down[0] > (self.parent.width / 2)):
+				(intensity, duration) = get_haptic_par(self.missile.size[0], self.vel, self.pos_up[0])
+				send_server(50001, intensity, duration, 200)
 		else:
-			send_server(40006, 0, 0, 200)
+			send_server(40003, 0, 0, 200)
+			send_server(50003, 0, 0, 200)
 
 	def update(self, dt):
 		# Size of missile increases when users press and hold
@@ -78,13 +85,12 @@ class ShootingGame(Widget):
 			self.missile.cont_travel(self.vel)
 			if ((self.missile.right < 0) or (self.missile.x > self.parent.width) or
 				(self.missile.top < 0) or (self.missile.y > self.parent.height)):
-				# print "real visual duration:" + str((time.time() - self.time_up) * 1000)
 				self.travel = False
 
 
 def get_haptic_par(size, vel, canvasWidth):
 	intensity = float(size)/300 * 0.29
-	vis_dur_tot = canvasWidth/(vel[0] * 60) * 1000
+	vis_dur_tot = canvasWidth/(abs(vel[0]) * 60) * 1000
 	hap_dur_tot = 0.69 * vis_dur_tot + 137.02
 	#hap_dur_tot = dur + soa = dur + 0.28 * dur + 60.7 => dur = (hap_dur_tot - 60.7)/1.28
 
@@ -101,7 +107,6 @@ def send_server(*args):
 
 
 class ShootingApp(App):
-
 	def build(self):
 		parent = Widget()
 		game =  ShootingGame()
@@ -111,8 +116,6 @@ class ShootingApp(App):
 		parent.add_widget(game)
 		parent.add_widget(missile)
 		parent.add_widget(button)
-
-		button.bind(on_press=partial(send_server, 40003, 0.29, 400, 200))
 
 		Clock.schedule_interval(game.update, 1.0 / 60.0)
 
