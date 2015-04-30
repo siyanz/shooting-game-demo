@@ -26,7 +26,7 @@ class Missile(Widget):
 class ShootingGame(Widget):
 	missile = ObjectProperty(None)
 	update = False
-	cont_travel = False
+	travel = True
 	pos_current = Vector(0, 0)
 	pos_down = Vector(0, 0)
 	pos_up = Vector(0, 0)
@@ -46,27 +46,58 @@ class ShootingGame(Widget):
 
 	def on_touch_move(self, touch):
 		self.pos_current = Vector(touch.x,  touch.y)
+		self.time_down = time.time()
 		self.missile.pos = (touch.x - self.missile.size[0]/2 , touch.y - self.missile.size[0]/2)
 
 	def on_touch_up(self, touch):
 		self.time_up = time.time()
 		self.pos_up = Vector(touch.x, touch.y)
 		self.travelT = self.time_up - self.time_down
-		self.vel = Vector((self.pos_up[0] - self.pos_down[0])/self.travelT/50, (self.pos_up[1] - self.pos_down[1])/self.travelT/50)
 
-		send_server(40006, 0.29, 400, 200)
+		if (self.travelT != 0):
+			self.vel = Vector(((self.pos_up[0] - self.pos_down[0])/self.travelT)/60, ((self.pos_up[1] - self.pos_down[1])/self.travelT)/60)
+
 		self.update = False
-		self.cont_travel = True
+		if (self.vel[0] != 0) and (self.vel[1] != 0):
+			self.travel = True
+			# print "visual velocity:" + str(self.vel[0])
+			(intensity, duration) = get_haptic_par(self.missile.size[0], self.vel, self.parent.width - self.pos_up[0])
+			# print "(visual, haptic) duration:" + str(self.parent.width/(self.vel[0]*60)*1000) + ", " + str(0.28 * duration + 60.7 + 1.4 * duration)
+			send_server(40003, intensity, duration, 200)
+		else:
+			send_server(40006, 0, 0, 200)
 
 	def update(self, dt):
+		# Size of missile increases when users press and hold
 		if (self.update == True):
 			self.missile.expend_size()
 			self.missile.pos = (self.pos_current[0] - self.missile.size[0]/2 , self.pos_current[1] - self.missile.size[0]/2)
-		if (self.cont_travel == True):
+
+		# Missile travels is users flicks the missile
+		if (self.travel == True):
 			self.missile.cont_travel(self.vel)
-			if (((self.missile.x + 2 * self.missile.size[0]) < 0) or (self.missile.x > self.parent.width)  or 
-				(self.missile.y < 0) or ((self.missile.y - 2 * self.missile.size[0]) > self.parent.height)):
-				self.cont_travel = False
+			if ((self.missile.right < 0) or (self.missile.x > self.parent.width) or
+				(self.missile.top < 0) or (self.missile.y > self.parent.height)):
+				# print "real visual duration:" + str((time.time() - self.time_up) * 1000)
+				self.travel = False
+
+
+def get_haptic_par(size, vel, canvasWidth):
+	intensity = float(size)/300 * 0.29
+	vis_dur_tot = canvasWidth/(vel[0] * 60) * 1000
+	hap_dur_tot = 0.69 * vis_dur_tot + 137.02
+	#hap_dur_tot = dur + soa = dur + 0.28 * dur + 60.7 => dur = (hap_dur_tot - 60.7)/1.28
+
+	return (intensity, (hap_dur_tot - 60.7)	/1.28)
+
+def send_server(*args):
+	port = args[0]
+	intensity = args[1]	
+	duration = args[2]
+	frequency = args[3]
+
+	MESSAGE = "%d;%f;%f;%f" % (port, intensity, duration, frequency)
+	sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
 
 
 class ShootingApp(App):
@@ -86,17 +117,7 @@ class ShootingApp(App):
 		Clock.schedule_interval(game.update, 1.0 / 60.0)
 
 		return parent
-	
 
-def send_server(*args):
-	port = args[0]
-	intensity = args[1]	
-	duration = args[2]
-	frequency = args[3]
-
-
-	MESSAGE = "%d;%f;%f;%f" % (port, intensity, duration, frequency)
-	sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
 
 
 if __name__ == '__main__':	

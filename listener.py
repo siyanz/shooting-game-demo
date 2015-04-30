@@ -19,7 +19,7 @@ def play_FE(a):
     frequency = float(a[3])
 
     ramp = 0.2 * duration
-    SOA = 0.28 + duration + 60.7
+    SOA = 0.28 * duration + 60.7
 
     msg = ("%f %f %f %f %f %f ;\n" % (intensity, ramp, duration+ramp, frequency, SOA, duration+ramp+SOA))
 
