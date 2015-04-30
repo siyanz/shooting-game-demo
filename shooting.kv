@@ -1,0 +1,19 @@
+#:kivy 1.9.0
+
+<Missile>:
+	size: 0, 0
+	canvas:
+		Color: 
+			rgb: (1, 0, 0)
+		Ellipse:
+	        pos: self.pos
+	        size: self.size
+
+<ShootingGame>:
+	missile: missile
+	canvas:
+		Rectangle:
+            pos: self.center_x-5, 0
+            size: 10, self.height
+	Missile:
+		id: missile
