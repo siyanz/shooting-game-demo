@@ -9,7 +9,30 @@
 	        pos: self.pos
 	        size: self.size
 
+<Enemy>:
+	size: 50, 50
+	canvas:
+		Color:
+			rgb: (1, 1, 1)
+		Rectangle:
+			source:'enemy.png'
+			pos: self.pos
+			size: self.size
+
+<Score>:
+    font_size: 30  
+    pos: self.pos
+    text: self.text
+    markup: True
+
 <ShootingGame>:
 	missile: missile
+	Label:
+	    font_size: 30  
+	    center_x: root.width
+	    y: 50
+	    text: "[color=ff3333]" + str(root.points) + "[/color]"
+	    markup: True
 	Missile:
 		id: missile
+	

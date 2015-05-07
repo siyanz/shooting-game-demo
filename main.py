@@ -4,14 +4,24 @@ __version__ = "1.9.0"
 from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty
+from kivy.uix.label import Label
 from kivy.vector import Vector
 from kivy.clock import Clock
 from kivy.uix.button import Button
 from functools import partial
 import socket, time
+from random import randint
+import random
 
+#setup graphics
+from kivy.config import Config
+Config.set('graphics','resizable',0)
+ 
+#Graphics fix
+from kivy.core.window import Window;
+Window.clearcolor = (1,1,1,1)
 
-UDP_IP = "128.237.217.81"
+UDP_IP = "128.237.220.101"
 UDP_PORT = 5005
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # sock.connect((UDP_IP, UDP_PORT))
@@ -23,8 +33,23 @@ class Missile(Widget):
 	def cont_travel(self, velocity):
 		self.pos = Vector(*velocity) + self.pos
 
+class Enemy(Widget):
+	velocity_x = NumericProperty(0)
+	velocity_y = NumericProperty(0)
+	spawnT = NumericProperty(0)
+	def move(self):
+		self.x = self.x + self.velocity_x
+		self.y = self.y + self.velocity_y
+
+class Score(Label):
+	def show_score(self, s):
+		self.text = str(s)
+
 class ShootingGame(Widget):
 	missile = ObjectProperty(None)
+	enemy_list = []
+	enemy_count = 0
+	enemy_amount = 1
 	update = False
 	travel = True
 	pos_current = Vector(0, 0)
@@ -34,7 +59,9 @@ class ShootingGame(Widget):
 	time_up = 0
 	travelT = 0
 	vel = Vector(0, 0)
+	points = NumericProperty(0)
 
+	# The following functions let users to shoot missiles by touching the screen
 	def on_touch_down(self, touch):
 		self.missile.size = Vector(0, 0)
 		if (touch.x < self.parent.width/2):
@@ -58,7 +85,8 @@ class ShootingGame(Widget):
 		self.travelT = self.time_up - self.time_down
 
 		if (self.travelT != 0):
-			self.vel = Vector(((self.pos_up[0] - self.pos_down[0])/self.travelT)/60, ((self.pos_up[1] - self.pos_down[1])/self.travelT)/60)
+			self.vel = Vector(((self.pos_up[0] - self.pos_down[0])/self.travelT)/60, 
+				((self.pos_up[1] - self.pos_down[1])/self.travelT)/60)
 
 		self.update = False
 
@@ -67,12 +95,27 @@ class ShootingGame(Widget):
 			if (self.vel[0] > 0 and self.pos_down[0] < (self.parent.width / 2)):
 				(intensity, duration) = get_haptic_par(self.missile.size[0], self.vel, self.parent.width - self.pos_up[0])
 				send_server(40001, intensity, duration, 200)
-			else if (self.vel[0] < 0 and self.pos_down[0] > (self.parent.width / 2)):
+			elif (self.vel[0] < 0 and self.pos_down[0] > (self.parent.width / 2)):
 				(intensity, duration) = get_haptic_par(self.missile.size[0], self.vel, self.pos_up[0])
 				send_server(50001, intensity, duration, 200)
 		else:
 			send_server(40003, 0, 0, 200)
 			send_server(50003, 0, 0, 200)
+
+	# Randomly generating an enemy
+	def drawEnemy(self, x_pos):
+		tmpEnemy = Enemy()
+		tmpEnemy.x = self.parent.width * x_pos
+
+		randPos = randint(1, 100)
+		tmpEnemy.y = float(randPos) /100 * self.parent.height
+
+		tmpEnemy.velocity_x = 0
+		tmpEnemy.velocity_y = randint(1, 5)
+		tmpEnemy.spawnT = time.time()
+
+		self.enemy_list.append(tmpEnemy)
+		self.add_widget(tmpEnemy)
 
 	def update(self, dt):
 		# Size of missile increases when users press and hold
@@ -86,6 +129,31 @@ class ShootingGame(Widget):
 			if ((self.missile.right < 0) or (self.missile.x > self.parent.width) or
 				(self.missile.top < 0) or (self.missile.y > self.parent.height)):
 				self.travel = False
+
+		if (self.enemy_list == []):
+			randX = random.choice([0.1, 0.2, 0.8, 0.9])
+			while (len(self.enemy_list) < self.enemy_amount):
+				self.drawEnemy(randX)
+				self.enemy_count += 1
+
+		for e in self.enemy_list:
+			if (e.y < 0 or e.top > self.parent.height):
+				e.velocity_y = -e.velocity_y
+			e.move()
+			if e.collide_widget(self.missile):
+				round_score = int(1.0/(time.time() - e.spawnT)/self.missile.size[0] * 1000)
+				if round_score > 300:
+					round_score = 300
+				elif round_score < 1:
+					round_score = 1
+				self.points  = self.points + round_score
+				score = Score()
+				score.pos = Vector(e.x, e.y + 5)
+				score.show_score("[color=ff3333]" + str(round_score) + "[/color]")
+				self.add_widget(score)
+				Clock.schedule_once(lambda dt: self.remove_widget(score), 1)
+				self.remove_widget(e)
+				self.enemy_list.remove(e)
 
 
 def get_haptic_par(size, vel, canvasWidth):
@@ -110,12 +178,10 @@ class ShootingApp(App):
 	def build(self):
 		parent = Widget()
 		game =  ShootingGame()
-		button = Button(text = "Play FE")
 		missile = Missile()
 
 		parent.add_widget(game)
 		parent.add_widget(missile)
-		parent.add_widget(button)
 
 		Clock.schedule_interval(game.update, 1.0 / 60.0)
 
