@@ -45,7 +45,6 @@ class Enemy(Widget):
 	def move(self):
 		self.x = self.x + self.velocity_x
 		self.y = self.y + self.velocity_y
-		print "move vel: " + str(self.velocity_y)
 
 class Score(Label):
 	def show_score(self, s):
@@ -57,7 +56,7 @@ class ShootingGame(Widget):
 	enemy_count = 0
 	enemy_amount = 1
 	update = False
-	travel = True
+	travel = False
 	pos_current = Vector(0, 0)
 	pos_down = Vector(0, 0)
 	pos_up = Vector(0, 0)
@@ -69,13 +68,15 @@ class ShootingGame(Widget):
 
 	# The following functions let users to shoot missiles by touching the screen
 	def on_touch_down(self, touch):
-		self.missile.source = 'atlas://images/sprite.atlas/frog'
-		self.missile.size = Vector(0, 0)
-		self.update = True
+		self.missile = Missile()
+		self.add_widget(self.missile)
+		self.missile.pos = (touch.x - self.missile.size[0]/2 , touch.y - self.missile.size[0]/2)
 		self.pos_current = Vector(touch.x, touch.y)
 		self.pos_down = self.pos_current
 		self.time_down = time.time()
-		self.missile.pos = (touch.x - self.missile.size[0]/2 , touch.y - self.missile.size[0]/2)		
+		self.missile.source = 'atlas://images/sprite.atlas/frog'
+		self.missile.size = Vector(0, 0)
+		self.update = True
 		if (touch.x < self.parent.width/2):
 			self.missile.angle = -90
 			send_server(40002, 0.29, 400, 200)
@@ -106,10 +107,10 @@ class ShootingGame(Widget):
 			#Rotate missile depending on where it's flipped to
 			a = math.degrees(math.atan(float(self.vel[1])/self.vel[0]))
 			self.missile.angle = -(90 - a)
-			if (self.vel[0] > 0 and self.pos_down[0] < (self.parent.width / 2)):
+			if (self.vel[0] > 0 and self.pos_down[0] < (self.parent.width / 3)):
 				(intensity, duration) = get_haptic_par(self.missile.size[0], self.vel, self.parent.width - self.pos_up[0])
 				send_server(40001, intensity, duration, 200)
-			elif (self.vel[0] < 0 and self.pos_down[0] > (self.parent.width / 2)):
+			elif (self.vel[0] < 0 and self.pos_down[0] > (self.parent.width * 2 / 3)):
 				(intensity, duration) = get_haptic_par(self.missile.size[0], self.vel, self.pos_up[0])
 				send_server(50001, intensity, duration, 200)
 		else:
@@ -135,6 +136,7 @@ class ShootingGame(Widget):
 		# Size of missile increases when users press and hold
 		if (self.update == True):
 			self.missile.expend_size()
+			print self.missile.size
 			self.missile.pos = (self.pos_current[0] - self.missile.size[0]/2 , self.pos_current[1] - self.missile.size[0]/2)
 
 		# Missile travels is users flicks the missile
@@ -151,7 +153,7 @@ class ShootingGame(Widget):
 				self.enemy_count += 1
 
 		for e in self.enemy_list:
-			e.move()
+			# e.move()
 			#Animate the bug turning around
 			if (e.top > self.parent.height):
 				angle = -180
@@ -161,7 +163,7 @@ class ShootingGame(Widget):
 				angle = 0
 				Animation(center=e.center, angle=angle, duration = 0.5).start(e)
 				e.velocity_y = -(e.velocity_y)
-			if e.collide_widget(self.missile):
+			if (self.missile and e.collide_widget(self.missile)):
 				#calculate score depending on how long it takes the player to hit the enemy
 				round_score = int(1.0/(time.time() - e.spawnT)/self.missile.size[0] * 1000)
 				if round_score > 30:
@@ -175,6 +177,8 @@ class ShootingGame(Widget):
 				self.add_widget(score)
 				Clock.schedule_once(lambda dt: self.remove_widget(score), 1)
 				self.remove_widget(e)
+				self.remove_widget(self.missile)
+				print self.missile.source
 				self.enemy_list.remove(e)
 
 
@@ -200,10 +204,8 @@ class ShootingApp(App):
 	def build(self):
 		parent = Widget()
 		game =  ShootingGame()
-		missile = Missile()
 
 		parent.add_widget(game)
-		parent.add_widget(missile)
 
 		Clock.schedule_interval(game.update, 1.0 / 60.0)
 
