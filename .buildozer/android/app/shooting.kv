@@ -1,0 +1,55 @@
+#:kivy 1.9.0
+#:import atlas kivy.atlas.Atlas
+
+<Missile>:
+	size: 10, 10
+	canvas.before:
+        PushMatrix
+        Rotate:
+            angle: self.angle
+            origin: self.center
+    canvas.after:
+        PopMatrix
+	canvas:
+		Color: 
+			rgb: (1, 1, 1)
+		Rectangle:
+			source: self.source
+	        pos: self.pos
+	        size: self.size
+	        
+
+<Enemy>:
+	size: 70, 70
+	canvas.before:
+        PushMatrix
+        Rotate:
+            angle: self.angle
+            origin: self.center
+    canvas.after:
+        PopMatrix
+	canvas:
+		Color:
+			rgb: (1, 1, 1)
+		Rectangle:
+			source:'atlas://images/sprite.atlas/bug'
+			pos: self.pos
+			size: self.size
+
+<Score>:
+    font_size: 30  
+    pos: self.pos
+    text: self.text
+    markup: True
+
+<ShootingGame>:
+	missile: missile
+	Label:
+	    font_size: 30  
+	    center_x: root.width
+	    y: 50
+	    text: "[color=ff3333]" + str(root.points) + "[/color]"
+	    markup: True
+	Missile:
+		id: missile
+	
