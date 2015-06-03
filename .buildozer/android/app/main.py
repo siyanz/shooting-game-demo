@@ -21,7 +21,7 @@ Config.set('graphics','resizable',0)
 from kivy.core.window import Window;
 Window.clearcolor = (1,1,1,1)
 
-UDP_IP = "128.237.247.18"
+UDP_IP = "128.237.221.218"
 UDP_PORT = 5005
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # sock.connect((UDP_IP, UDP_PORT))
@@ -45,7 +45,6 @@ class Enemy(Widget):
 	def move(self):
 		self.x = self.x + self.velocity_x
 		self.y = self.y + self.velocity_y
-		print "move vel: " + str(self.velocity_y)
 
 class Score(Label):
 	def show_score(self, s):
@@ -57,7 +56,7 @@ class ShootingGame(Widget):
 	enemy_count = 0
 	enemy_amount = 1
 	update = False
-	travel = True
+	travel = False
 	pos_current = Vector(0, 0)
 	pos_down = Vector(0, 0)
 	pos_up = Vector(0, 0)
@@ -69,13 +68,18 @@ class ShootingGame(Widget):
 
 	# The following functions let users to shoot missiles by touching the screen
 	def on_touch_down(self, touch):
-		self.missile.source = 'atlas://images/sprite.atlas/frog'
-		self.missile.size = Vector(0, 0)
-		self.update = True
+		# remove missile before redrawing a new one.
+		if (self.missile):
+			self.remove_widget(self.missile)
+		self.missile = Missile()
+		self.add_widget(self.missile)
+		self.missile.pos = (touch.x - self.missile.size[0]/2 , touch.y - self.missile.size[0]/2)
 		self.pos_current = Vector(touch.x, touch.y)
 		self.pos_down = self.pos_current
 		self.time_down = time.time()
-		self.missile.pos = (touch.x - self.missile.size[0]/2 , touch.y - self.missile.size[0]/2)		
+		self.missile.source = 'atlas://images/sprite.atlas/frog'
+		self.missile.size = Vector(0, 0)
+		self.update = True
 		if (touch.x < self.parent.width/2):
 			self.missile.angle = -90
 			send_server(40002, 0.29, 400, 200)
@@ -102,17 +106,24 @@ class ShootingGame(Widget):
 		self.update = False
 
 		if (self.vel[0] != 0) and (self.vel[1] != 0):
-			self.travel = True
 			#Rotate missile depending on where it's flipped to
 			a = math.degrees(math.atan(float(self.vel[1])/self.vel[0]))
 			self.missile.angle = -(90 - a)
-			if (self.vel[0] > 0 and self.pos_down[0] < (self.parent.width / 2)):
+			if (self.vel[0] > 0 and self.pos_down[0] < (self.parent.width / 3)):
+				self.travel = True
+				print self.vel[0]
 				(intensity, duration) = get_haptic_par(self.missile.size[0], self.vel, self.parent.width - self.pos_up[0])
 				send_server(40001, intensity, duration, 200)
-			elif (self.vel[0] < 0 and self.pos_down[0] > (self.parent.width / 2)):
+			elif (self.vel[0] < 0 and self.pos_down[0] > (self.parent.width * 2 / 3)):
+				self.travel = True
 				(intensity, duration) = get_haptic_par(self.missile.size[0], self.vel, self.pos_up[0])
 				send_server(50001, intensity, duration, 200)
+			else:
+				self.remove_widget(self.missile)
+				send_server(40003, 0, 0, 200)
+				send_server(50003, 0, 0, 200)
 		else:
+			self.remove_widget(self.missile)
 			send_server(40003, 0, 0, 200)
 			send_server(50003, 0, 0, 200)
 
@@ -135,6 +146,7 @@ class ShootingGame(Widget):
 		# Size of missile increases when users press and hold
 		if (self.update == True):
 			self.missile.expend_size()
+			print self.missile.size
 			self.missile.pos = (self.pos_current[0] - self.missile.size[0]/2 , self.pos_current[1] - self.missile.size[0]/2)
 
 		# Missile travels is users flicks the missile
@@ -151,23 +163,27 @@ class ShootingGame(Widget):
 				self.enemy_count += 1
 
 		for e in self.enemy_list:
-			e.move()
-			#Animate the bug turning around
-			if (e.top > self.parent.height):
-				angle = -180
-				Animation(center=e.center, angle=angle, duration = 0.5).start(e)
-				e.velocity_y = -(e.velocity_y)
-			elif (e.y < 0):
-				angle = 0
-				Animation(center=e.center, angle=angle, duration = 0.5).start(e)
-				e.velocity_y = -(e.velocity_y)
-			if e.collide_widget(self.missile):
+			# e.move()
+			# Animate the bug turning around
+			# if (e.top > self.parent.height):
+			# 	angle = -180
+			# 	Animation(center=e.center, angle=angle, duration = 0.5).start(e)
+			# 	e.velocity_y = -(e.velocity_y)
+			# elif (e.y < 0):
+			# 	angle = 0
+			# 	Animation(center=e.center, angle=angle, duration = 0.5).start(e)
+			# 	e.velocity_y = -(e.velocity_y)
+			if (self.missile and e.collide_widget(self.missile)):
 				#calculate score depending on how long it takes the player to hit the enemy
 				round_score = int(1.0/(time.time() - e.spawnT)/self.missile.size[0] * 1000)
-				if round_score > 300:
-					round_score = 300
+				if round_score > 30:
+					round_score = 30
 				elif round_score < 1:
 					round_score = 1
+				if (e.x < self.parent.width / 2):
+					send_server(60001, 0, 0, 200)
+				if (e.x > self.parent.width / 2):
+					send_server(60002, 0, 0, 200)
 				self.points  = self.points + round_score
 				score = Score()
 				score.pos = Vector(e.x, e.y + 5)
@@ -175,6 +191,8 @@ class ShootingGame(Widget):
 				self.add_widget(score)
 				Clock.schedule_once(lambda dt: self.remove_widget(score), 1)
 				self.remove_widget(e)
+				#removing missile as well - removed bug: frog gets stuck on the edge of the screen
+				self.remove_widget(self.missile)
 				self.enemy_list.remove(e)
 
 
@@ -200,10 +218,8 @@ class ShootingApp(App):
 	def build(self):
 		parent = Widget()
 		game =  ShootingGame()
-		missile = Missile()
 
 		parent.add_widget(game)
-		parent.add_widget(missile)
 
 		Clock.schedule_interval(game.update, 1.0 / 60.0)
 

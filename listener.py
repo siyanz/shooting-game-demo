@@ -3,7 +3,8 @@ import socket
 UDP_IP = socket.gethostbyname(socket.gethostname())
 UDP_PORT = 5005
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # UDP
 sock.bind((UDP_IP, UDP_PORT))
 
 left_hand = 40003
@@ -33,7 +34,6 @@ while True:
     if data:
         array = data.split(';')
         play_FE(array)
-
 
 
 

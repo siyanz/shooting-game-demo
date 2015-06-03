@@ -1,4 +1,4 @@
-#N canvas 274 130 980 416 10;
+#N canvas 46 51 980 416 10;
 #X obj 351 60 vline~;
 #X obj 336 97 *~;
 #X obj 503 60 vline~;
@@ -77,6 +77,25 @@
 #X obj 691 219 netreceive 50002 1;
 #X obj 347 183 netreceive 50001 1;
 #X obj 761 82 dac~ 1;
+#X obj 333 631 vline~;
+#X obj 318 668 *~;
+#X obj 301 631 osc~;
+#X obj 318 700 dac~ 1;
+#X msg 301 591 200;
+#X msg 340 589 0 \, 0.4 5 0 \, 0 5 200;
+#X text 298 538 Blast at collision;
+#X obj 300 561 netreceive 60001 1;
+#X obj 246 587 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 586 631 vline~;
+#X obj 571 668 *~;
+#X obj 554 631 osc~;
+#X msg 554 591 200;
+#X msg 593 589 0 \, 0.4 5 0 \, 0 5 200;
+#X obj 499 587 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
+-1 -1;
+#X obj 553 561 netreceive 60002 1;
+#X obj 571 700 dac~ 2;
 #X connect 0 0 1 1;
 #X connect 1 0 35 0;
 #X connect 2 0 3 1;
@@ -151,4 +170,20 @@
 #X connect 72 0 46 0;
 #X connect 72 0 65 0;
 #X connect 72 0 57 0;
+#X connect 74 0 75 1;
+#X connect 75 0 77 0;
+#X connect 76 0 75 0;
+#X connect 78 0 76 0;
+#X connect 79 0 74 0;
+#X connect 81 0 78 0;
+#X connect 81 0 82 0;
+#X connect 81 0 79 0;
+#X connect 83 0 84 1;
+#X connect 84 0 90 0;
+#X connect 85 0 84 0;
+#X connect 86 0 85 0;
+#X connect 87 0 83 0;
+#X connect 89 0 86 0;
+#X connect 89 0 88 0;
+#X connect 89 0 87 0;
 #X coords 0 416 1 415 85 60 0;

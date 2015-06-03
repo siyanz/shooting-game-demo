@@ -43,13 +43,10 @@
     markup: True
 
 <ShootingGame>:
-	missile: missile
 	Label:
-	    font_size: 30  
-	    center_x: root.width
-	    y: 50
-	    text: "[color=ff3333]" + str(root.points) + "[/color]"
+	    font_size: 50  
+	    center_x: self.width * 8
+	    y: 30
+	    text: "[color=000000]" + str(root.points) + "[/color]"
 	    markup: True
-	Missile:
-		id: missile
 	
