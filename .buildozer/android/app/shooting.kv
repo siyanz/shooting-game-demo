@@ -1,5 +1,151 @@
 #:kivy 1.9.0
 #:import atlas kivy.atlas.Atlas
+#:import NoTransition kivy.uix.screenmanager.NoTransition
+#:import SlideTransition kivy.uix.screenmanager.SlideTransition
+
+
+<WelcomeScreen>:
+	Button:
+		text: "Learn about haptic illusions"
+		size_hint: None, None
+		size: 500, 70
+		pos: 100, 200
+		font_size: 30
+		on_release: 
+			app.root.transition = SlideTransition()
+			app.root.current = "basic1"
+
+	Button:
+		text: "Play our game"
+		size_hint: None, None
+		size: 500, 70
+		pos: 100, 100
+		font_size: 30
+		on_release: 
+			app.root.transition = SlideTransition()
+			app.root.current = "game"
+
+<BasicScreen1>:
+	name: "basic1"
+	Label:
+		text: "When two hands are vibrated with a time lapse in the middle, \nyou would feel a continuous motion across the hands." 
+		font_size: 30
+		color: .8,.9,0,1
+	Button:
+		text: "Play"
+		size_hint: None, None
+		size: 140, 70
+		pos: 1000, 200
+		font_size: 30
+		on_release:
+			app.play_haptic(0.5, 400)
+
+	Button:
+		text: "Next"
+		size_hint: None, None
+		size: 140, 70
+		pos: 1000, 120
+		font_size: 30
+		on_release: 
+			app.root.transition = SlideTransition()
+			app.root.current = "basic2"
+
+<BasicScreen2>:
+	name: "basic2"
+	Label:
+		text: "You can change the speed of the motion across hands. \nBut regardless of speed, the motion always feels continuous." 
+		font_size: 30
+		color: .8,.9,0,1
+		pos: 0, 150
+
+	Slider:
+		id: s1
+		value: 100
+		range: (100, 800)
+		step: 1
+		pos: 0, 0
+		padding: 250
+
+	Button:
+		text: "Play"
+		size_hint: None, None
+		size: 140, 70
+		pos: 1000, 200
+		font_size: 30
+		on_release:
+			app.play_haptic(0.5, s1.value)
+
+	Button:
+		text: "Next"
+		size_hint: None, None
+		size: 140, 70
+		pos: 1000, 120
+		font_size: 30
+		on_release: 
+			app.root.transition = SlideTransition()
+			app.root.current = "basic3"
+
+<BasicScreen3>:
+	name: "basic3"
+	Label:
+		text: "You can change the speed of the motion across hands. \n But regardless of speed, the motion is continuous." 
+		font_size: 30
+		pos: 0, 200
+		color: .8,.9,0.1,1
+
+	Label:
+		text: "Speed (fast <-> slow)"
+		font_size: 30
+		pos: 0, -25
+		color: 0, 0, 0, 1
+
+	Slider: 
+		id: s2
+		min: 100
+		max: 800
+		pos: 0, -75
+		padding: 250
+
+
+	Button:
+		text: "Play"
+		size_hint: None, None
+		size: 250, 70
+		pos: 1000, 200
+		font_size: 30
+		on_release:
+			app.play_ball(0.5, s2.value)
+			app.play_haptic(0.5, s2.value)
+
+	Button:
+		text: "Play the game"
+		size_hint: None, None
+		size: 250, 70
+		pos: 1000, 120
+		font_size: 30
+		on_release: 
+			app.root.transition = SlideTransition()
+			app.root.current = "game"
+
+<TestCircle>:
+	canvas:
+		Color: 
+			rgb: (0, 1, 1)
+		Ellipse:
+			size: 100, 100
+			pos: self.pos
+
+<GameScreen>:
+	name: "game"
+	Button: 
+		text: "Back"
+		size_hint: None, None
+		size: 70, 70
+		pos: 0, 0
+		font_size: 30
+		on_release: 
+			app.root.transition = SlideTransition(direction="right")
+			app.root.current = "welcome"
 
 <Missile>:
 	size: 10, 10
@@ -16,8 +162,7 @@
 		Rectangle:
 			source: self.source
 	        pos: self.pos
-	        size: self.size
-	        
+	        size: self.size 
 
 <Enemy>:
 	size: 70, 70

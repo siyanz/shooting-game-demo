@@ -4,6 +4,7 @@ __version__ = "1.9.0"
 from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProperty, StringProperty
+from kivy.uix.relativelayout import RelativeLayout
 from kivy.animation import Animation
 from kivy.uix.label import Label
 from kivy.vector import Vector
@@ -11,8 +12,11 @@ from kivy.clock import Clock
 from kivy.uix.button import Button
 from kivy.uix.screenmanager import ScreenManager, Screen
 from functools import partial
-import socket, time, math, random
+import socket, time, math, random, math
 from random import randint
+from kivy.lang import Builder
+ 
+Builder.load_file('shooting.kv')
 
 #setup graphics
 from kivy.config import Config
@@ -51,6 +55,10 @@ class Score(Label):
 	def show_score(self, s):
 		self.text = str(s)
 
+class TestCircle(Widget):
+	def move(self, dt):
+		self.x = self.x + self.velocity_x
+
 class ShootingGame(Widget):
 	missile = ObjectProperty(None)
 	enemy_list = []
@@ -82,10 +90,10 @@ class ShootingGame(Widget):
 		self.missile.size = Vector(0, 0)
 		self.update = True
 		if (touch.x < self.parent.width/2):
-			self.missile.angle = -90
+			self.missile.angle = -45
 			send_server(40002, 0.29, 400, 200)
 		else:
-			self.missile.angle = 90
+			self.missile.angle = 45
 			send_server(50002, 0.29, 400, 200)
 
 	def on_touch_move(self, touch):
@@ -214,19 +222,53 @@ def send_server(*args):
 	MESSAGE = "%d;%f;%f;%f" % (port, intensity, duration, frequency)
 	sock.sendto(MESSAGE, (UDP_IP, UDP_PORT))
 
+class WelcomeScreen(Screen):
+	pass
+
+class BasicScreen1(Screen):
+	pass
+
+class BasicScreen2(Screen):
+	pass
+
+class BasicScreen3(Screen):
+	pass
+
+class GameScreen(Screen):
+	def __init__(self, **kwargs):
+	    super(GameScreen, self).__init__(**kwargs)
+	    self.game = ShootingGame()
+	    self.add_widget(self.game)
+	    Clock.schedule_interval(self.game.update, 1.0 / 60.0)
+
+sm = ScreenManager()
+sm.add_widget(WelcomeScreen(name='welcome'))
+sm.add_widget(BasicScreen1(name='basic1'))
+sm.add_widget(BasicScreen2(name='basic2'))
+basicscreen3 = BasicScreen3(name='basic3')
+sm.add_widget(basicscreen3)
+game_screen = GameScreen(name='game')
+sm.add_widget(game_screen)
 
 class ShootingApp(App):
+	def play_haptic(self, intensity, duration):
+		send_server(40001, intensity, duration, 70)
+
+	def play_ball(self, intensity, duration):
+		ball = TestCircle()
+		# i = 0.0106 * math.pow(10, (intensity - 38.892)/9.7721)
+		# ball.size = Vector(50, 50)
+		ball.pos = Vector(0,405)
+		basicscreen3.add_widget(ball)
+		lengthT = duration + 0.4 * duration + 0.28 * duration + 60.7
+		ball.velocity_x = ball.parent.width/lengthT * 20
+		Clock.schedule_interval(ball.move, 1.0/60.0)
+		if (ball.x > ball.parent.width):
+			basicscreen3.remove_widget(ball)
+
+
 	def build(self):
-		parent = Widget()
-		game =  ShootingGame()
-
-		parent.add_widget(game)
-
-		Clock.schedule_interval(game.update, 1.0 / 60.0)
-
-		return parent
-
-
+		return sm
 
 if __name__ == '__main__':	
     ShootingApp().run()
