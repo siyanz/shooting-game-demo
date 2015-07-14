@@ -6,7 +6,7 @@
 
 <WelcomeScreen>:
 	Button:
-		text: "Learn about haptic illusions"
+		text: "Learn about tactile illusions"
 		size_hint: None, None
 		size: 500, 70
 		pos: 100, 200
@@ -88,7 +88,7 @@
 <BasicScreen3>:
 	name: "basic3"
 	Label:
-		text: "You can change the speed of the motion across hands. \n But regardless of speed, the motion is continuous." 
+		text: "We can generate visual content that optimally matches with the tactile illusion. \nThe two motions work together to generate coherent multimodal experience." 
 		font_size: 30
 		pos: 0, 200
 		color: .8,.9,0.1,1
@@ -145,10 +145,11 @@
 		font_size: 30
 		on_release: 
 			app.root.transition = SlideTransition(direction="right")
+			root.game.points = 0
 			app.root.current = "welcome"
 
 <Missile>:
-	size: 10, 10
+	size: 50, 50
 	canvas.before:
         PushMatrix
         Rotate:
@@ -177,9 +178,17 @@
 		Color:
 			rgb: (1, 1, 1)
 		Rectangle:
-			source:'atlas://images/sprite.atlas/bug'
+			source: self.source
 			pos: self.pos
 			size: self.size
+
+<HungerBar>:
+	canvas:
+		Color: 
+			rgb: (0, 1, 1)
+		Rectangle:
+			size: 100, 10
+			pos: 1300, 30
 
 <Score>:
     font_size: 30  
@@ -187,11 +196,5 @@
     text: self.text
     markup: True
 
-<ShootingGame>:
-	Label:
-	    font_size: 50  
-	    center_x: self.width * 8
-	    y: 30
-	    text: "[color=000000]" + str(root.points) + "[/color]"
-	    markup: True
+
 	
