@@ -118,6 +118,11 @@ class ShootingGame(Widget):
 	pos_up = Vector(0, 0)
 	time_down = 0
 	time_up = 0
+<<<<<<< HEAD
+=======
+	travelT = 0
+	enemy_on_left = True
+>>>>>>> origin/master
 	missile_onscreen = False
 	vel = Vector(0, 0)
 	points = NumericProperty(0)
@@ -132,6 +137,7 @@ class ShootingGame(Widget):
 
 	# The following functions let users to shoot missiles by touching the screen
 	def on_touch_down(self, touch):
+<<<<<<< HEAD
 		if (self.missile):
 			self.remove_widget(self.missile)
 			self.vel = Vector(0, 0)
@@ -146,10 +152,22 @@ class ShootingGame(Widget):
 				Color(1, 0, 0)
 				self.line = Line(points=(touch.x, touch.y, touch.x, touch.y), width = 2)
 			# generate a new missile
+=======
+		# remove missile before redrawing a new one.
+
+		self.update = True
+		if (self.missile):
+			self.remove_widget(self.missile)
+
+		if ((not self.missile_onscreen) and 
+			((self.enemy_on_left and touch.x > (self.parent.width/2)) or
+			((not self.enemy_on_left) and touch.x < self.parent.width/2))):
+>>>>>>> origin/master
 			self.missile_onscreen = True
 			self.missile = Missile()
 			self.add_widget(self.missile)
 			self.missile.pos = (touch.x - self.missile.size[0]/2 , touch.y - self.missile.size[0]/2)
+<<<<<<< HEAD
 			self.pos_down = Vector(touch.x, touch.y)
 			self.time_down = time.time()
 			self.missile.source = 'atlas://images/sprite.atlas/frog'
@@ -160,11 +178,23 @@ class ShootingGame(Widget):
 				send_server(40002, 0.29, 400, 200)
 		# right
 		else:
+=======
+			self.pos_current = Vector(touch.x, touch.y)
+			self.pos_down = self.pos_current
+			self.time_down = time.time()
+			self.missile.source = 'atlas://images/sprite.atlas/frog'
+			self.missile.size = Vector(0, 0)
+			if (touch.x < self.parent.width/2):
+				self.missile.angle = -45
+				send_server(40002, 0.29, 400, 200)
+			else:
+>>>>>>> origin/master
 				self.missile.angle = 45
 				send_server(50002, 0.29, 400, 200)
 
 	def on_touch_move(self, touch):
 		if (self.missile_onscreen):
+<<<<<<< HEAD
 			self.time_down = time.time()
 			with self.canvas:
 				self.line.points = [touch.x, touch.y, self.pos_down.x, self.pos_down.y]
@@ -198,16 +228,52 @@ class ShootingGame(Widget):
 				# right
 					send_server(40001, intensity, duration, 200)
 				elif (self.vel[0] < 0 and self.pos_down[0] > (self.parent.width / 2)):
+=======
+			self.pos_current = Vector(touch.x,  touch.y)
+			self.time_down = time.time()
+			self.missile.pos = (touch.x - self.missile.size[0]/2 , touch.y - self.missile.size[0]/2)
+
+	def on_touch_up(self, touch):
+		if (self.missile and self.missile_onscreen):
+			self.time_up = time.time()
+			self.pos_up = Vector(touch.x, touch.y)
+			self.travelT = self.time_up - self.time_down
+			self.missile.source = 'atlas://images/sprite.atlas/frog_jump'
+			self.missile.size = Vector(1.3 * self.missile.size[0], 1.3 * self.missile.size[1])
+
+			if (self.travelT != 0):
+				self.vel = Vector(((self.pos_up[0] - self.pos_down[0])/self.travelT)/60, 
+					((self.pos_up[1] - self.pos_down[1])/self.travelT)/60)
+
+			self.update = False
+
+			if (abs(self.vel[0]) > 5 ) and (self.vel[1] != 0):
+				print("x vel: "+str(self.vel[0]))
+				print("y vel: "+str(self.vel[1]))
+				#Rotate missile depending on where it's flipped to
+				a = math.degrees(math.atan(float(self.vel[1])/self.vel[0]))
+				if (self.vel[0] > 0 and self.pos_down[0] < (self.parent.width / 3)):
+					self.missile.angle = a - 45
+					self.travel = True
+					(intensity, duration) = get_haptic_par(self.missile.size[0], self.vel, self.parent.width - self.pos_up[0])
+					send_server(40001, intensity, duration, 200)
+				elif (self.vel[0] < 0 and self.pos_down[0] > (self.parent.width * 2 / 3)):
+					self.missile.angle = a + 45
+>>>>>>> origin/master
 					self.travel = True
 					(intensity, duration) = get_haptic_par(self.missile.size[0], self.vel, self.pos_up[0])
 					send_server(50001, intensity, duration, 200)
 				else:
 					self.remove_widget(self.missile)
+<<<<<<< HEAD
 					self.vel = Vector(0, 0)
+=======
+>>>>>>> origin/master
 					send_server(40003, 0, 0, 200)
 					send_server(50003, 0, 0, 200)
 			else:
 				self.remove_widget(self.missile)
+<<<<<<< HEAD
 				self.vel = Vector(0, 0)
 				self.missile_onscreen = False
 				self.vel = Vector(0, 0)
@@ -219,6 +285,11 @@ class ShootingGame(Widget):
 		bar = HungerBar()
 		self.add_widget(bar)
 		return bar
+=======
+				self.missile_onscreen = False
+				send_server(40003, 0, 0, 200)
+				send_server(50003, 0, 0, 200)
+>>>>>>> origin/master
 
 	# Randomly generating an enemy
 	def drawEnemy(self, x_pos):
@@ -227,6 +298,7 @@ class ShootingGame(Widget):
 
 		# 1280 is the width of the screen
 		if (tmpEnemy.x < 1280/2):
+<<<<<<< HEAD
 			tmpEnemy.enemy_on_left = True
 		else:
 			tmpEnemy.enemy_on_left = False
@@ -234,6 +306,16 @@ class ShootingGame(Widget):
 		randPos = randint(15, 90)
 		# 1200 is the width of the screen
 		tmpEnemy.y = float(randPos) /100 * 800
+=======
+			self.enemy_on_left = True
+		else:
+			self.enemy_on_left = False
+
+		randPos = randint(10, 90)
+		# 1200 is the width of the screen
+		tmpEnemy.y = float(randPos) /100 * 800
+		print("left?: " + str(self.enemy_on_left))
+>>>>>>> origin/master
 
 		tmpEnemy.velocity_x = 0
 		tmpEnemy.velocity_y = -(randint(1, 3))
@@ -242,9 +324,17 @@ class ShootingGame(Widget):
 		self.add_widget(tmpEnemy)
 		return tmpEnemy
 
+<<<<<<< HEAD
 	def enemyAnimation(self, dt):
 		self.enemy.drawWalking()
 		self.enemy.decrease(int(self.b_f_counter/10 + 1))
+=======
+	def update(self, dt):
+		# Size of missile increases when users press and hold
+		if (self.update and self.missile):
+			self.missile.expend_size()
+			self.missile.pos = (self.pos_current[0] - self.missile.size[0]/2 , self.pos_current[1] - self.missile.size[0]/2)
+>>>>>>> origin/master
 
 	def update(self, dt):
 		# Missile travels is users flicks the missile
@@ -254,6 +344,7 @@ class ShootingGame(Widget):
 				(self.missile.top < 0) or (self.missile.y > self.parent.height)):
 				self.travel = False
 				self.missile_onscreen = False
+<<<<<<< HEAD
 				self.vel = Vector(0, 0)
 
 
@@ -303,6 +394,48 @@ class ShootingGame(Widget):
 			self.vel = Vector(0, 0)
 			# self.enemy_list.remove(e)
 
+=======
+		if (self.enemy_list == []):
+			randX = random.choice([0.1, 0.2, 0.8, 0.9])
+			while (len(self.enemy_list) < self.enemy_amount):
+				self.drawEnemy(randX)
+				self.enemy_count += 1
+
+		for e in self.enemy_list:
+			# e.move()
+			# Animate the bug turning around
+			# if (e.top > self.parent.height):
+			# 	angle = -180
+			# 	Animation(center=e.center, angle=angle, duration = 0.5).start(e)
+			# 	e.velocity_y = -(e.velocity_y)
+			# elif (e.y < 0):
+			# 	angle = 0
+			# 	Animation(center=e.center, angle=angle, duration = 0.5).start(e)
+			# 	e.velocity_y = -(e.velocity_y)
+			if (self.missile and e.collide_widget(self.missile) and self.missile_onscreen):
+				#calculate score depending on how long it takes the player to hit the enemy
+				round_score = int(1.0/(time.time() - e.spawnT)/self.missile.size[0] * 1000)
+				if round_score > 30:
+					round_score = 30
+				elif round_score < 1:
+					round_score = 1
+				if (e.x < self.parent.width / 2):
+					send_server(60001, 0, 0, 200)
+				if (e.x > self.parent.width / 2):
+					send_server(60002, 0, 0, 200)
+				self.points  = self.points + round_score
+				score = Score()
+				score.pos = Vector(e.x, e.y + 5)
+				score.show_score("[color=ff3333]" + str(round_score) + "[/color]")
+				self.add_widget(score)
+				Clock.schedule_once(lambda dt: self.remove_widget(score), 1)
+				self.remove_widget(e)
+				#removing missile as well - removed bug: frog gets stuck on the edge of the screen
+				self.remove_widget(self.missile)
+				self.missile_onscreen = False
+				self.enemy_list.remove(e)
+
+>>>>>>> origin/master
 def get_haptic_par(size, vel, canvasWidth):
 	intensity = float(size)/300 * 0.29
 	vis_dur_tot = canvasWidth/(abs(vel[0]) * 60) * 1000
