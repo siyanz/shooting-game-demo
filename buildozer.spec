@@ -1,7 +1,7 @@
 [app]
 
 # (str) Title of your application
-title = Shooting Game
+title = Feed ME!
 
 # (str) Package name
 package.name = ShootingApp
@@ -23,6 +23,8 @@ source.include_exts = py,png,jpg,kv,atlas
 
 # (list) List of exclusions using pattern matching
 #source.exclude_patterns = license,images/*/*.jpg
+
+# (str) Application versioning (method 1)
 
 # (str) Application versioning (method 2)
 version = 1.9.0

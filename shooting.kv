@@ -2,6 +2,7 @@
 #:import atlas kivy.atlas.Atlas
 #:import NoTransition kivy.uix.screenmanager.NoTransition
 #:import SlideTransition kivy.uix.screenmanager.SlideTransition
+#:import Window kivy.core.window 
 
 
 <WelcomeScreen>:
@@ -23,6 +24,8 @@
 		font_size: 30
 		on_release: 
 			app.root.transition = SlideTransition()
+			app.game_screen.game.is_gameOver = False
+			app.game_screen.game.restart()
 			app.root.current = "game"
 
 <BasicScreen1>:
@@ -125,6 +128,8 @@
 		font_size: 30
 		on_release: 
 			app.root.transition = SlideTransition()
+			app.game_screen.game.is_gameOver = False
+			app.game_screen.game.restart()
 			app.root.current = "game"
 
 <TestCircle>:
@@ -146,6 +151,8 @@
 		on_release: 
 			app.root.transition = SlideTransition(direction="right")
 			root.game.points = 0
+			app.game_screen.game.is_gameOver = True
+			app.game_screen.game.remove_all()
 			app.root.current = "welcome"
 
 <Missile>:
@@ -166,7 +173,7 @@
 	        size: self.size 
 
 <Enemy>:
-	size: 70, 70
+	size: 100, 100	
 	canvas.before:
         PushMatrix
         Rotate:
@@ -191,20 +198,52 @@
 			pos: 1300, 30
 
 <Score>:
-    font_size: 30  
+    font_size: self.font_size
     pos: self.pos
     text: self.text
     markup: True
 
-<<<<<<< HEAD
-
-=======
 <ShootingGame>:
+	canvas:
+		Color:
+			rgb: (1, 1, 1)
+		Rectangle:
+			source:'./images/' + root.next_missile + ".png"
+			pos: Window.Window.width/2 - 25, Window.Window.height*0.025 - 25
+			size: 70, 70
 	Label:
-	    font_size: 50  
-	    center_x: self.width * 7
-	    y: 30
-	    text: "[color=000000]" + str(root.points) + "[/color]"
+	    font_size: Window.Window.width*0.015
+	    center: Window.Window.width*7/8, Window.Window.height*0.055
+	    text: "[color=000000] Score [/color]"
 	    markup: True
->>>>>>> origin/master
-	
+	Label:
+		font_size: Window.Window.width* 0.03
+		center: Window.Window.width*7/8, Window.Window.height*0.025
+		text: "[color=000000]" + str(root.point) + "[/color]"
+		markup: True
+	Label:
+	    font_size: Window.Window.width*0.015
+	    center: Window.Window.width*6/8, Window.Window.height*0.055
+	    text: "[color=000000] Time left [/color]"
+	    markup: True
+	Label:
+		font_size: Window.Window.width* 0.03
+		center: Window.Window.width*6/8, Window.Window.height*0.025
+		text: "[color=000000]" + str(60 - root.timer) + " sec[/color]"
+		markup: True
+	Label:
+	    font_size: Window.Window.width*0.015
+	    center: Window.Window.width*1/4, Window.Window.height*0.055
+	    text: "[color=000000] Level [/color]"
+	    markup: True
+	Label:
+		font_size: Window.Window.width* 0.03
+		center: Window.Window.width*1/4, Window.Window.height*0.025
+		text: "[color=000000]" + str(root.level) + "[/color]"
+		markup: True
+
+	Label:
+		font_size: Window.Window.width* 0.015
+		center: Window.Window.width/2, Window.Window.height*0.09
+		text: "[color=000000] Upcoming [/color]"
+		markup: True	
