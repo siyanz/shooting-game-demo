@@ -66,12 +66,12 @@ class Enemy(Widget):
 	source = StringProperty("")
 	# tracks position of the enemy (left or right)
 	enemy_on_left = True
-	state = "walking"
+	state = "walk"
 	def decrease(self, dec):
 		self.size[0] = self.size[0] - dec
 		self.size[1] = self.size[1] - dec
 	def move(self):
-		if (self.state == "walking"):
+		if (self.state == "walk"):
 			self.x = self.x + self.velocity_x
 			self.y = self.y + self.velocity_y
 		elif (self.state == "hopping"):
@@ -80,7 +80,7 @@ class Enemy(Widget):
 				if (self.x < randX * Window.width):
 					self.x = self.x + 20
 				else:
-					self.state = "walking"
+					self.state = "walk"
 					self.enemy_on_left = False
 					print(self.enemy_on_left)
 			else:
@@ -88,53 +88,44 @@ class Enemy(Widget):
 				if (self.x > randX * Window.width):
 					self.x = self.x - 20
 				else:
-					self.state = "walking"
+					self.state = "walk"
 					self.enemy_on_left = True
 					print(self.enemy_on_left)
 		
 	def drawWalking(self, step):
 		with self.canvas:
-			def changeWalk(rect, newSource, *largs):
-				print(newSource[:-1])
-				if (self.state == "eating"):
-					Clock.unschedule
-				print(self.state)
-				rect.source = newSource
-			if (self.state == "walking"):
-				if (self.velocity_y > 0):
-					self.source = 'atlas://images/images/sprite.atlas/up_1'
-					Clock.create_trigger(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/up_2'),step)
-					Clock.create_trigger(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/up_3'),step*2)
-					# self.move()
-					Clock.create_trigger(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/up_4'),step*3)
+			atlas = "atlas://images/images/sprite.atlas/"
+
+			if (self.source != ""):
+				curr_s = self.source.split("/")[-1].split("_")[0]
+				curr_count = self.source.split("/")[-1].split("_")[-1]
+				# change to walk if eating
+				if (curr_s == "eat" and curr_count == "6"):
+					self.state = "walk"
+				# check if state has changed
+				if (curr_s == self.state):
+					s = atlas+curr_s
+					if (curr_count == "6"):
+						curr_count = "0"
+				else:
+					s = atlas+self.state
+					if (self.state == "eat"):
+						curr_count = "2"
+					else:
+						curr_count = "0"
+				# if walk, check if up or down
+				if self.state == "walk":
+					if self.velocity_y > 0:
+						s = s + "_up"
+					else:
+						s = s + "_down"
+				# form rest of string
+				self.source = s + "_" + str(int(curr_count) + 1)
+				# move enemy if necessary
+				if (curr_s == "walk" and (curr_count == "3" or curr_count == "4")):
 					self.move()
-					Clock.create_trigger(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/up_5'),step*4)
-					self.move()
-					Clock.create_trigger(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/up_6'),step*5)
-				if (self.velocity_y < 0):
-					self.source = 'atlas://images/images/sprite.atlas/down_1'
-					Clock.schedule_once(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/down_2'),step)
-					Clock.schedule_once(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/down_3'),step*2)
-					# self.move()
-					Clock.schedule_once(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/down_4'),step*3)
-					self.move()
-					Clock.schedule_once(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/down_5'),step*4)
-					self.move()
-					Clock.schedule_once(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/down_6'),step*5)
-			elif (self.state == "eating"):
-				self.source = 'atlas://images/images/sprite.atlas/eat_1'
-				Clock.schedule_once(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/eat_2'),step*1)
-				# self.move()
-				Clock.schedule_once(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/eat_3'),step*2)
-				# self.move()
-				Clock.schedule_once(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/eat_4'),step*3)
-				Clock.schedule_once(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/eat_5'),step*5)
-				# self.move()
-				Clock.schedule_once(partial(changeWalk, self, 'atlas://images/images/sprite.atlas/eat_6'),step*6)
-				self.state = "walking"
-				# self.source = './images/walk1.png'
-			elif (self.state == "hopping"):
-				print("hopping")
+			else:
+				self.source = atlas+"walk_down_1"
 
 class Score(Label):
 	def show_score(self, s):
@@ -177,7 +168,7 @@ class ShootingGame(Widget):
 		# self.enemy = self.drawEnemy(randX)
 
 		Clock.schedule_interval(self.update, 1.0 / 60.0)
-		Clock.schedule_interval(partial(self.enemyAnimation, 0.1), 0.5)
+		Clock.schedule_interval(partial(self.enemyAnimation, 0.1), 0.1)
 		Clock.schedule_interval(self.inc_timer, 1)
 
 	# The following functions let users to shoot missiles by touching the screen
@@ -466,11 +457,11 @@ class ShootingGame(Widget):
 				# controls the timing of the enemy moving
 				# if ((time.time() % self.movement_timer) < 0.015):
 				# 	self.b_f_counter += 1
-				# 	if (self.enemy.state == "walking"):
+				# 	if (self.enemy.state == "walk"):
 				# 		self.b_f_counter += 1
 				# 		self.enemy.state = "mouth_open"
 				# 	elif (self.enemy.state == "mouth_open"):
-				# 		self.enemy.state = "walking"
+				# 		self.enemy.state = "walk"
 				self.movement_timer = random.randint(3, 5)
 
 			# print(self.enemy.angle)
@@ -489,8 +480,8 @@ class ShootingGame(Widget):
 				self.enemy.velocity_y = -(self.enemy.velocity_y)
 			# when frog catches the bug
 			if (self.missile and self.enemy.collide_widget(self.missile) and self.missile_onscreen):
-				self.enemy.state = "eating"
-				print("change to eating state")
+				self.enemy.state = "eat"
+				print("change to eat state")
 				score = Score()
 				score.pos = Vector(self.enemy.x, self.enemy.y + 5)
 				score.font_size = 30
