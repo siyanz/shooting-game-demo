@@ -95,17 +95,16 @@ class Enemy(Widget):
 	def drawWalking(self, step):
 		with self.canvas:
 			atlas = "atlas://images/images/sprite.atlas/"
-
 			if (self.source != ""):
 				curr_s = self.source.split("/")[-1].split("_")[0]
 				curr_count = self.source.split("/")[-1].split("_")[-1]
 				# change to walk if eating
-				if (curr_s == "eat" and curr_count == "6"):
+				if (curr_s == "eat" and curr_count == "5"):
 					self.state = "walk"
 				# check if state has changed
 				if (curr_s == self.state):
 					s = atlas+curr_s
-					if (curr_count == "6"):
+					if (curr_count == "5"):
 						curr_count = "0"
 				else:
 					s = atlas+self.state
@@ -168,7 +167,7 @@ class ShootingGame(Widget):
 		# self.enemy = self.drawEnemy(randX)
 
 		Clock.schedule_interval(self.update, 1.0 / 60.0)
-		Clock.schedule_interval(partial(self.enemyAnimation, 0.1), 0.1)
+		Clock.schedule_interval(partial(self.enemyAnimation, 0.15), 0.15) 
 		Clock.schedule_interval(self.inc_timer, 1)
 
 	# The following functions let users to shoot missiles by touching the screen
@@ -254,10 +253,10 @@ class ShootingGame(Widget):
 					a = math.degrees(math.atan((-(touch.y - self.pos_down[1]))/(-(touch.x - self.pos_down[0]))))
 					# left
 					if (self.pos_down[0] < self.parent.width/2) and (touch.x - self.pos_down[0] < 0):
-						self.missile.angle = a/2 - 45
+						self.missile.angle = a/2
 					# right
 					elif (self.pos_down[0] > self.parent.width/2) and (touch.x - self.pos_down[0] > 0): 
-						self.missile.angle = a/2 + 45
+						self.missile.angle = a/2
 
 	def on_touch_up(self, touch):
 		if (not self.is_gameOver):
@@ -333,7 +332,7 @@ class ShootingGame(Widget):
 
 		randPos = randint(15, 90)
 		# 1200 is the width of the screen
-		tmpEnemy.y = float(randPos) /100 * Window.width
+		tmpEnemy.y = float(randPos) /100 * Window.height
 
 		# print(tmpEnemy.y)
 
